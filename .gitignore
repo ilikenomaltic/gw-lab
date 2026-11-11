@@ -1,0 +1,12 @@
+# 작업용 원본과 레퍼런스는 배포에 포함하지 않는다
+reference/
+picture/
+VOYAGE.md
+
+# WSL 이 윈도우에서 복사한 파일에 붙이는 부산물
+*:Zone.Identifier
+
+# 에디터·OS 부산물
+.DS_Store
+Thumbs.db
+assets/sec-ligo.jpg

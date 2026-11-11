@@ -1,0 +1,1879 @@
+/* ==========================================================================
+   중력파 체험관 — design tokens
+   Dark ground, off-white type, terracotta reserved for shapes and graphs.
+   8px spacing grid. Text column 720px, interactive stages up to 1080px,
+   both sharing one left edge.
+   ========================================================================== */
+
+:root {
+  /* Ground and ink */
+  --bg:          #0A0A0A;
+  --surface:     #17150F;
+  --ink:         #F5F3EF;
+  --ink-soft:    rgba(245, 243, 239, 0.62);
+  --ink-faint:   rgba(245, 243, 239, 0.34);
+  --rule:        rgba(245, 243, 239, 0.20);
+
+  /* Accent — shapes, graphs and borders only, never body copy */
+  --accent:      #D9703F;
+  --accent-dim:  rgba(217, 112, 63, 0.22);
+  --accent-haze: rgba(217, 112, 63, 0.08);
+
+  /* Type */
+  --font: "Pretendard Variable", Pretendard, system-ui, "Noto Sans KR", sans-serif;
+  /* JetBrains Mono 에는 한글 글리프가 없다. 숫자 옆에 한글이 한 글자라도
+     섞이면 두부가 되므로 폴백에 한글 글꼴을 반드시 끼워 둔다. */
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular,
+          "Pretendard Variable", Pretendard, "Noto Sans KR", monospace;
+
+  /* 8px grid */
+  --s1:  8px;
+  --s2: 16px;
+  --s3: 24px;
+  --s4: 32px;
+  --s6: 48px;
+  --s8: 64px;
+  --s12: 96px;
+
+  /* Measure */
+  --w-text: 720px;
+  --w-wide: 1080px;
+  --gutter: clamp(20px, 5vw, 56px);
+
+  /* Motion */
+  --ease:   cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);   /* overshoots, then settles */
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+  /* Korean breaks mid-word without this; keep-all holds each 어절 together */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Film grain so the flat black reads as a surface, not a void */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.016;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* --------------------------------------------------------------------------
+   Layout primitives
+   -------------------------------------------------------------------------- */
+
+.wrap {
+  width: 100%;
+  max-width: var(--w-wide);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Every text block shares the wrap's left edge and stops at the measure */
+.col { max-width: var(--w-text); }
+
+.section {
+  padding-block: var(--s12);
+  scroll-margin-top: var(--s3);
+}
+
+.section + .section { border-top: 1px solid var(--rule); }
+
+/* --------------------------------------------------------------------------
+   Type scale — small stays small, display goes very large, nothing between
+   -------------------------------------------------------------------------- */
+
+h1, h2, h3 {
+  margin: 0;
+  font-weight: 900;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(52px, 13vw, 132px);
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+}
+
+h2 {
+  font-size: clamp(32px, 6vw, 60px);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+}
+
+h3 {
+  font-size: 18px;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+
+p { margin: 0; text-wrap: pretty; }
+
+.eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--ink-soft);
+}
+
+.eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 10px;
+  vertical-align: 0.1em;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.lede {
+  font-size: clamp(16px, 2.2vw, 19px);
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
+.num { font-family: var(--mono); font-feature-settings: "tnum"; }
+
+sup {
+  font-size: 0.62em;
+  line-height: 0;
+  vertical-align: 0.5em;
+}
+
+/* Short terracotta rule used as a section marker */
+.tick {
+  width: 56px;
+  height: 3px;
+  border: 0;
+  margin: 0;
+  background: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   Evidence badges — black-bordered for fact, terracotta for everything softer
+   -------------------------------------------------------------------------- */
+
+.badge {
+  display: inline-block;
+  padding: 3px 11px 4px;
+  border: 1px solid var(--ink-faint);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.badge--fact { border-color: var(--ink); }
+
+.badge--hypothesis,
+.badge--theory,
+.badge--example { border-color: var(--accent); }
+
+/* --------------------------------------------------------------------------
+   Cover
+   -------------------------------------------------------------------------- */
+
+.cover {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.cover::before {
+  content: "";
+  position: absolute;
+  inset: -12% 0 0;
+  height: 124%;
+  z-index: -2;
+  background: #000 url("assets/cover-deepfield.jpg") center 30% / cover no-repeat;
+  opacity: 0.55;
+  transform: translate3d(0, var(--parallax, 0px), 0);
+  will-change: transform;
+}
+
+/* Keep the type legible over the galaxies and fade the plate into the page */
+.cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(to bottom, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.2) 34%, rgba(10,10,10,0.92) 82%, var(--bg) 100%),
+    radial-gradient(120% 80% at 10% 70%, rgba(10,10,10,0.78), transparent 60%);
+}
+
+.cover__bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding-block: var(--s3);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.cover__bar .num { letter-spacing: 0.1em; }
+
+.cover__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-block: var(--s8) var(--s6);
+}
+
+.cover__title { margin-bottom: var(--s3); }
+
+.cover__sub {
+  max-width: 30ch;
+  margin-top: var(--s3);
+  font-size: clamp(17px, 2.4vw, 21px);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.cover__cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: var(--s4);
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.cover__cue svg { flex: none; }
+
+/* Contents — four links, scrolls with the page */
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1) var(--s4);
+  padding-block: var(--s3) var(--s6);
+  border-top: 1px solid var(--rule);
+}
+
+.toc a {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  text-decoration: none;
+  transition: color 200ms var(--ease);
+}
+
+.toc a:hover,
+.toc a:focus-visible { color: var(--ink); }
+
+.toc a .num {
+  font-size: 11px;
+  color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   Experiment frame shared by all four sections
+   -------------------------------------------------------------------------- */
+
+.exp__head > * + * { margin-top: var(--s3); }
+
+.exp__stage {
+  max-width: var(--w-wide);
+  margin-top: var(--s6);
+}
+
+/* Placeholder until the real stage lands */
+.stage-todo {
+  display: grid;
+  place-content: center;
+  gap: var(--s1);
+  min-height: 320px;
+  padding: var(--s4);
+  border: 1px dashed var(--rule);
+  border-radius: 12px;
+  background: var(--accent-haze);
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 13px;
+}
+
+.stage-todo strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+/* "실제와 다른 점" — closed by default */
+.caveat {
+  max-width: var(--w-text);
+  margin-top: var(--s4);
+  border-top: 1px solid var(--rule);
+}
+
+.caveat > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-block: var(--s2);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  list-style: none;
+  transition: color 180ms var(--ease);
+}
+
+.caveat > summary::-webkit-details-marker { display: none; }
+
+.caveat > summary::before {
+  content: "";
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background:
+    linear-gradient(var(--accent), var(--accent)) center / 5px 1px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) center / 1px 5px no-repeat;
+  transition: transform 220ms var(--ease);
+}
+
+.caveat[open] > summary::before {
+  transform: rotate(45deg);
+  background-size: 5px 1px, 0 0;
+}
+
+.caveat > summary:hover { color: var(--ink); }
+
+.caveat__body {
+  padding-bottom: var(--s3);
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+/* --------------------------------------------------------------------------
+   Closing — what is known, unknown, next
+   -------------------------------------------------------------------------- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s2);
+  margin-top: var(--s6);
+}
+
+.card {
+  padding: var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.card h3 { margin-bottom: var(--s2); }
+
+.card p {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
+.card .num { color: var(--ink); }
+
+.closing-line {
+  max-width: 34ch;
+  margin-top: var(--s8);
+  font-size: clamp(20px, 3.4vw, 30px);
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: -0.025em;
+}
+
+/* --------------------------------------------------------------------------
+   Sources
+   -------------------------------------------------------------------------- */
+
+.sources { padding-block: var(--s12) var(--s8); }
+
+.sources ul {
+  max-width: var(--w-text);
+  margin: var(--s6) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sources li {
+  padding-block: var(--s2);
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.sources li .num { color: var(--ink); }
+
+.sources a { color: var(--ink); text-decoration-color: var(--ink-faint); }
+
+.colophon {
+  max-width: var(--w-text);
+  margin-top: var(--s6);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+/* --------------------------------------------------------------------------
+   Narrow screens — 360px must not scroll sideways
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  .section { padding-block: var(--s8); }
+  .cards { grid-template-columns: 1fr; }
+  .toc { gap: var(--s1) var(--s3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Cover entrance — the one scripted moment on the page
+   -------------------------------------------------------------------------- */
+
+.is-animated .cover__title,
+.is-animated .cover .tick,
+.is-animated .cover__sub,
+.is-animated .cover__cue,
+.is-animated .toc {
+  animation: rise 820ms var(--spring) backwards;
+}
+
+.is-animated .cover__title { animation-delay:  60ms; }
+.is-animated .cover .tick  { animation-delay: 240ms; }
+.is-animated .cover__sub   { animation-delay: 300ms; }
+.is-animated .cover__cue   { animation-delay: 400ms; }
+.is-animated .toc          { animation-delay: 520ms; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(26px) scale(0.965); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   Scroll behaviour — reading progress, springy reveals, tactile hovers
+   Every rule here is gated on .is-animated, which main.js only adds when the
+   reader has not asked for reduced motion. With JS off nothing is hidden.
+   -------------------------------------------------------------------------- */
+
+.progress {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 2px;
+  z-index: 90;
+  pointer-events: none;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+/* Elements wait just below their resting place, then overshoot into it.
+   main.js strips the attribute when the animation ends so hover transforms
+   further down are not fighting an animation fill. */
+.is-animated [data-reveal] { opacity: 0; }
+
+.is-animated [data-reveal].is-in {
+  animation: pop 780ms var(--spring) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+@keyframes pop {
+  from { opacity: 0; transform: translateY(30px) scale(0.962); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Cards travel a little further so the three of them land in sequence */
+.is-animated .card[data-reveal].is-in {
+  animation-name: pop-card;
+  animation-duration: 860ms;
+}
+
+@keyframes pop-card {
+  from { opacity: 0; transform: translateY(44px) scale(0.93); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Hovers answer back */
+.card {
+  transition:
+    transform 520ms var(--spring),
+    border-color 240ms var(--ease),
+    background-color 240ms var(--ease);
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  border-color: var(--accent-dim);
+}
+
+.toc a { transition: color 200ms var(--ease), transform 420ms var(--spring); }
+.toc a:hover,
+.toc a:focus-visible { transform: translateX(5px); }
+
+.toc a .num { transition: transform 420ms var(--spring); }
+.toc a:hover .num { transform: scale(1.35); }
+
+.badge { transition: transform 420ms var(--spring), border-color 220ms var(--ease); }
+.badge:hover { transform: translateY(-2px) scale(1.04); }
+
+.caveat > summary::before { will-change: transform; }
+
+.caveat > summary:hover::before { transform: scale(1.18); }
+.caveat[open] > summary:hover::before { transform: rotate(45deg) scale(1.18); }
+
+.stage-todo {
+  transition: border-color 260ms var(--ease), background-color 260ms var(--ease);
+}
+
+.stage-todo:hover {
+  border-color: var(--accent-dim);
+  background: var(--accent-dim);
+}
+
+/* Counters hold their own width so the layout does not jitter while counting */
+.counting { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  .progress { display: none; }
+  .is-animated [data-reveal] { opacity: 1; }
+}
+
+/* ==========================================================================
+   체험 1 — 블랙홀 소리 실험실
+   ========================================================================== */
+
+.lab {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) 1fr;
+  gap: var(--s2);
+  align-items: start;
+}
+
+.panel {
+  padding: var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.panel + .panel { margin-top: var(--s2); }
+
+.panel__title {
+  margin: 0 0 var(--s3);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+}
+
+/* ---- Mass sliders ---- */
+
+.field + .field { margin-top: var(--s3); }
+
+.field__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2);
+  margin-bottom: 10px;
+}
+
+.field__name { font-size: 14px; color: var(--ink-soft); }
+
+.field__value {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.field__unit {
+  margin-left: 3px;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--rule);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -8.5px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  transition: transform 300ms var(--spring);
+}
+
+input[type="range"]:hover::-webkit-slider-thumb,
+input[type="range"]:focus-visible::-webkit-slider-thumb { transform: scale(1.25); }
+
+input[type="range"]::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--rule);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  transition: transform 300ms var(--spring);
+}
+
+input[type="range"]:hover::-moz-range-thumb { transform: scale(1.25); }
+
+input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; }
+
+/* ---- Buttons ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition:
+    transform 380ms var(--spring),
+    border-color 200ms var(--ease),
+    background-color 200ms var(--ease);
+}
+
+.btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+.btn:active { transform: translateY(0) scale(0.97); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.btn--primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #0A0A0A;
+  font-weight: 700;
+}
+
+.btn--primary:hover { background: #E58050; border-color: #E58050; }
+
+.btn[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.btn[disabled] { opacity: 0.4; cursor: default; transform: none; }
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+}
+
+.presets .btn { flex: 1 1 auto; font-size: 13px; padding: 9px 12px; }
+
+.transport {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+  margin-top: var(--s3);
+}
+
+.transport .btn--primary { flex: 1 1 140px; }
+
+/* ---- Pitch-boost switch ---- */
+
+.switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+  cursor: pointer;
+}
+
+.switch input { position: absolute; opacity: 0; pointer-events: none; }
+
+.switch__track {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 22px;
+  margin-top: 1px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: transparent;
+  transition: background-color 240ms var(--ease), border-color 240ms var(--ease);
+}
+
+.switch__track::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  transition: transform 380ms var(--spring), background-color 240ms var(--ease);
+}
+
+.switch input:checked + .switch__track {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.switch input:checked + .switch__track::after {
+  transform: translateX(18px);
+  background: var(--accent);
+}
+
+.switch input:focus-visible + .switch__track { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.switch__text { font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+.switch__text b { display: block; font-weight: 600; color: var(--ink); }
+
+/* ---- Frequency graph ---- */
+
+.plot {
+  position: relative;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.plot canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+.plot__tag {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+
+/* ---- Result readout ---- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s2);
+  margin-top: var(--s2);
+  padding: var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.stat__label {
+  margin-bottom: 6px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+}
+
+.stat__value {
+  font-family: var(--mono);
+  font-size: clamp(19px, 2.6vw, 26px);
+  font-weight: 500;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__value small {
+  margin-left: 2px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
+/* A value that is a sentence rather than a number drops to body type */
+.stat__value.is-text {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.note {
+  margin-top: var(--s2);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+}
+
+.note--warn { color: var(--accent); }
+
+@media (max-width: 900px) {
+  .lab { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, 1fr); gap: var(--s3) var(--s2); }
+}
+
+@media (max-width: 420px) {
+  .presets .btn { flex: 1 1 100%; }
+}
+
+/* ==========================================================================
+   체험 4 — 블랙홀 키우기
+   ========================================================================== */
+
+.game__setup { max-width: var(--w-text); }
+
+.envs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s2);
+  margin-top: var(--s3);
+}
+
+.env {
+  display: block;
+  padding: var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 420ms var(--spring), border-color 220ms var(--ease);
+}
+
+.env:hover { transform: translateY(-5px); border-color: var(--accent); }
+.env:active { transform: translateY(-1px) scale(0.98); }
+.env:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.env__name { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+
+.env__kick {
+  margin-top: var(--s2);
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.env__kick small {
+  margin-left: 3px;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.env__desc { margin-top: 10px; font-size: 13px; line-height: 1.55; color: var(--ink-soft); }
+
+/* ---- Board ---- */
+
+.game__board[hidden] { display: none; }
+
+.game__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s1) var(--s4);
+  padding-bottom: var(--s3);
+  border-bottom: 1px solid var(--rule);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.game__meta b { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+.game__meta .spacer { flex: 1; }
+
+.btn--small { padding: 7px 12px; font-size: 13px; }
+
+/* ---- Cards ---- */
+
+.bh-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  min-height: 140px;
+  margin-top: var(--s3);
+  align-items: flex-end;
+}
+
+.bh-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: var(--s1);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 420ms var(--spring);
+}
+
+.bh-card:hover { transform: translateY(-5px); }
+.bh-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.bh-card__disc {
+  border-radius: 50%;
+  transition: box-shadow 220ms var(--ease), transform 420ms var(--spring);
+}
+
+/* 1세대는 별에서 바로 생긴 블랙홀 — 비어 있는 원 */
+.bh-card[data-gen="1"] .bh-card__disc {
+  background: var(--bg);
+  border: 1.5px solid var(--ink-faint);
+}
+
+/* 2세대는 한 번 합쳐진 것 */
+.bh-card[data-gen="2"] .bh-card__disc {
+  background: var(--accent-dim);
+  border: 1.5px solid var(--accent);
+}
+
+/* 3세대 이상은 꽉 찬 테라코타 */
+.bh-card[data-gen="3"] .bh-card__disc {
+  background: var(--accent);
+  border: 1.5px solid var(--accent);
+}
+
+.bh-card[aria-pressed="true"] .bh-card__disc {
+  box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent);
+  transform: scale(1.06);
+}
+
+.bh-card__mass {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.bh-card__gen { font-size: 11px; color: var(--ink-faint); }
+
+.bh-card.is-new .bh-card__disc { animation: bh-arrive 620ms var(--spring) both; }
+
+@keyframes bh-arrive {
+  from { opacity: 0; transform: scale(0.3); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.bh-card.is-kicked { pointer-events: none; animation: bh-kick 560ms var(--ease) forwards; }
+
+@keyframes bh-kick {
+  to { opacity: 0; transform: translate(42px, -56px) scale(0.5); }
+}
+
+/* ---- Merge action ---- */
+
+.game__action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin-top: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+}
+
+.game__pick {
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.game__pick b { color: var(--ink); font-weight: 500; }
+
+/* ---- Mass band ---- */
+
+.band { margin-top: var(--s6); }
+
+.band__rail {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(245, 243, 239, 0.08);
+}
+
+.band__gap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--accent-dim);
+}
+
+.band__goal {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+}
+
+.band__dot {
+  position: absolute;
+  top: -2px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: var(--ink);
+  transition: left 520ms var(--spring);
+}
+
+.band__dot[data-gen="2"] { background: var(--accent-dim); border: 1.5px solid var(--accent); }
+.band__dot[data-gen="3"] { background: var(--accent); }
+
+.band__marks {
+  position: relative;
+  height: 34px;
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.band__mark { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.band__mark span { display: block; font-family: var(--font); margin-top: 3px; }
+.band__mark--gap  span { color: var(--accent); }
+.band__mark--goal span { color: var(--accent); }
+
+/* ---- Log ---- */
+
+.gamelog {
+  max-height: 168px;
+  margin-top: var(--s6);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--ink-soft);
+}
+
+.gamelog p { animation: pop 420ms var(--spring) both; }
+.gamelog .kicked { color: var(--accent); }
+.gamelog .won { color: var(--ink); font-weight: 700; }
+
+/* ---- Outcome ---- */
+
+.outcome {
+  margin-top: var(--s4);
+  padding: var(--s4);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--accent-haze);
+  animation: pop 640ms var(--spring) both;
+}
+
+.outcome[hidden] { display: none; }
+
+.outcome__title {
+  font-size: clamp(22px, 4vw, 32px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.outcome__stats {
+  margin-top: var(--s3);
+  font-family: var(--mono);
+  font-size: 15px;
+}
+
+.outcome__body {
+  max-width: 60ch;
+  margin-top: var(--s3);
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.outcome .btn { margin-top: var(--s3); }
+
+@media (max-width: 760px) {
+  .envs { grid-template-columns: 1fr; }
+  .bh-grid { gap: var(--s1); }
+}
+
+/* ==========================================================================
+   체험 3 — 별의 일생 시뮬레이터
+   레이아웃은 체험 1 의 .lab / .panel / .plot 을 그대로 쓴다. 두 체험이 같은
+   틀 안에서 돌아가야 읽는 사람이 조작법을 두 번 배우지 않는다.
+   ========================================================================== */
+
+.plot--tall canvas { aspect-ratio: 4 / 3; }
+
+.fate {
+  margin-top: var(--s2);
+  padding: var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.fate__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.fate__name {
+  font-size: clamp(20px, 3.4vw, 28px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.fate__rows {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px var(--s3);
+  margin: var(--s3) 0 0;
+  font-size: 14px;
+}
+
+.fate__rows dt { color: var(--ink-faint); white-space: nowrap; }
+
+.fate__rows dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.fate__rows dd small {
+  margin-left: 3px;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+/* 이름이나 설명이 들어가는 칸은 본문 글꼴로 돌린다 */
+.fate__rows dd.is-text { font-family: var(--font); color: var(--ink-soft); }
+
+.fate__foot {
+  margin-top: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+}
+
+/* 명세서: 확인하지 못한 이론 경계는 숫자를 흐리게 보인다 */
+.is-dim { opacity: 0.55; }
+
+/* GW231123 의 무거운 쪽이 띠 어디에 앉는지 */
+.band__flag {
+  position: absolute;
+  top: -22px;
+  bottom: -22px;
+  width: 1px;
+  background: var(--accent);
+  opacity: 0.55;
+}
+
+.band__flag span {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.star__mass {
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.star__mass small {
+  margin-left: 4px;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+/* ==========================================================================
+   체험 2 — 10^21 줌
+   긴 트랙 안에 화면 하나를 고정해 두고, 스크롤한 거리를 배율로 바꾼다.
+   조상에 transform 이 걸리면 sticky 가 깨지므로 이 영역은 리빌에서 뺀다.
+   ========================================================================== */
+
+.zoom {
+  --zoom-track: 440vh;
+  position: relative;
+}
+
+.zoom__track { height: var(--zoom-track); }
+
+.zoom__pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-height: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding-block: var(--s3);
+}
+
+.zoom__screen {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.zoom__screen canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* 진행 막대 — 지금 21제곱 중 어디까지 내려왔는가 */
+.zoom__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: rgba(245, 243, 239, 0.1);
+}
+
+.zoom__bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: 0 50%;
+}
+
+.zoom__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  transition: opacity 400ms var(--ease);
+  pointer-events: none;
+}
+
+/* ---- Readout ---- */
+
+.zoom__readout {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--s2) var(--s4);
+  align-items: end;
+  padding: var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.zoom__what {
+  font-size: clamp(18px, 3vw, 26px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.zoom__cell { text-align: right; }
+
+.zoom__cell dt {
+  margin-bottom: 5px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+}
+
+.zoom__cell dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: clamp(15px, 2.2vw, 20px);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ---- Step rail ---- */
+
+.zoom__rail {
+  display: flex;
+  gap: 4px;
+  margin-top: var(--s1);
+}
+
+.zoom__step {
+  flex: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: rgba(245, 243, 239, 0.12);
+  height: 4px;
+  cursor: pointer;
+  transition: background-color 240ms var(--ease), transform 360ms var(--spring);
+}
+
+.zoom__step:hover { transform: scaleY(2); }
+.zoom__step[aria-current="true"] { background: var(--accent); }
+.zoom__step:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ---- Closing panel ---- */
+
+.zoom__final {
+  margin-top: var(--s2);
+  padding: var(--s3);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--accent-haze);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 520ms var(--ease), transform 640ms var(--spring);
+  pointer-events: none;
+}
+
+.zoom__final.is-in { opacity: 1; transform: none; pointer-events: auto; }
+
+.zoom__sum {
+  font-family: var(--mono);
+  font-size: clamp(14px, 2.1vw, 17px);
+  line-height: 2;
+}
+
+.zoom__sum b { color: var(--accent); font-weight: 500; }
+
+.zoom__analogy {
+  max-width: 62ch;
+  margin-top: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 760px) {
+  .zoom { --zoom-track: 380vh; }
+  .zoom__readout { grid-template-columns: 1fr 1fr; }
+  .zoom__what { grid-column: 1 / -1; }
+  .zoom__cell:first-of-type { text-align: left; }
+}
+
+/* ==========================================================================
+   디자인 개편 — 명세서 3장 제약 해제분
+   풀블리드 제목, 섹션별 배경판, 상자 위계 3단, 구(球)로 보이는 카드.
+   본문 가독성(720px)과 흑백+테라코타 원칙은 그대로 지킨다.
+   ========================================================================== */
+
+/* ---- 별먼지. 생성해서 그리므로 내려받는 바이트는 0 이다. ---- */
+
+#stardust {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+body {
+  /* 완전한 평면 검정 대신 가운데가 아주 살짝 들린 바닥 */
+  background:
+    radial-gradient(120% 70% at 50% -10%, #15120E 0%, transparent 55%),
+    var(--bg);
+}
+
+/* ---- 섹션마다 다른 곳에 와 있게 ---- */
+
+.section {
+  position: relative;
+  isolation: isolate;
+}
+
+/* 사진판. 위아래로 사라지게 가려서 섹션끼리 이어 붙는다. */
+.section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: var(--sec-img, none);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.17;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 72%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 72%, transparent);
+}
+
+/* 글자가 앉는 왼쪽을 덮어 가독성을 지킨다 */
+.section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(100deg, var(--bg) 18%, rgba(10,10,10,0.72) 48%, rgba(10,10,10,0.35) 100%),
+    radial-gradient(90% 60% at 12% 30%, rgba(217,112,63,0.07), transparent 60%);
+}
+
+.section:not([style*="--sec-img"])::after { background: none; }
+
+/* 1px 선 대신 빛이 바래는 경계 */
+.section + .section { border-top: 0; }
+
+.section + .section::before { }
+
+/* ---- 표지 ---- */
+
+.cover__title {
+  display: block;
+  max-width: none;
+  margin-bottom: var(--s4);
+  font-size: clamp(40px, 13.5vw, 212px);
+  /* 한글은 라틴과 달리 em 박스를 거의 꽉 채운다. 0.9 아래로 내리면
+     윗줄 받침과 아랫줄 머리가 겹친다. */
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+}
+
+.cover__title span { display: block; }
+.cover__title span:last-child { margin-left: 0.055em; }
+
+.cover__body { padding-block: var(--s8) var(--s4); }
+
+/* ---- 상자 위계 1단: 조작 패널 — 테두리를 버리고 선 하나로 ---- */
+
+.panel {
+  padding: var(--s3) var(--s3) var(--s3) var(--s3);
+  border: 0;
+  border-left: 2px solid var(--accent-dim);
+  border-radius: 0;
+  background: linear-gradient(100deg, rgba(245,243,239,0.045), transparent 70%);
+}
+
+.panel__title { color: var(--accent); opacity: 0.85; }
+
+/* ---- 2단: 데이터 화면 — 가장 깊게 파 넣는다 ---- */
+
+.plot,
+.zoom__screen {
+  border-color: rgba(245,243,239,0.16);
+  border-radius: 4px;
+  background:
+    radial-gradient(100% 120% at 50% 0%, rgba(245,243,239,0.045), transparent 60%),
+    #070706;
+  box-shadow: inset 0 1px 0 rgba(245,243,239,0.05);
+}
+
+/* ---- 3단: 결과·요약 카드 — 테두리 없이 면으로 ---- */
+
+.stats,
+.fate,
+.card,
+.outcome,
+.zoom__readout {
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(245,243,239,0.07), rgba(245,243,239,0.025) 60%);
+}
+
+.outcome {
+  background: linear-gradient(160deg, rgba(217,112,63,0.2), rgba(217,112,63,0.05) 65%);
+  box-shadow: inset 0 0 0 1px var(--accent-dim);
+}
+
+.card:hover { background: linear-gradient(160deg, rgba(245,243,239,0.1), rgba(245,243,239,0.03) 60%); }
+
+/* ---- 정리 카드: 숫자가 먼저 읽히게 ---- */
+
+.cards { grid-template-columns: 1.4fr 1fr 1fr; gap: var(--s2); }
+
+.card { display: flex; flex-direction: column; padding: var(--s4) var(--s3) var(--s3); }
+
+p.card__figure {
+  margin-bottom: var(--s2);
+  font-family: var(--mono);
+  font-size: clamp(52px, 7vw, 92px);
+  font-weight: 500;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+}
+
+.card--lead p.card__figure { color: var(--accent); }
+p.card__figure--text { color: var(--ink-faint); }
+.card__tag { margin-top: auto; padding-top: var(--s3); }
+
+.closing-line {
+  max-width: 20ch;
+  font-size: clamp(26px, 5.2vw, 56px);
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+}
+
+/* ---- 체험 3 은 좌우를 뒤집는다 ---- */
+
+.lab--mirror { grid-template-columns: 1fr minmax(260px, 340px); }
+.lab--mirror .lab__controls { order: 2; }
+.lab--mirror .lab__view { order: 1; }
+
+/* ---- 게임 카드: 테두리만 있던 원을 구로 ---- */
+
+.bh-card[data-gen="1"] .bh-card__disc {
+  border: 0;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(245,243,239,0.22), transparent 52%),
+    radial-gradient(circle at 50% 50%, #1C1916, #050505 72%);
+  box-shadow: inset 0 0 0 1px rgba(245,243,239,0.3);
+}
+
+.bh-card[data-gen="2"] .bh-card__disc {
+  border: 0;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(217,112,63,0.5), transparent 55%),
+    radial-gradient(circle at 50% 50%, rgba(217,112,63,0.26), #0A0908 74%);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.bh-card[data-gen="3"] .bh-card__disc {
+  border: 0;
+  background:
+    radial-gradient(circle at 34% 26%, #F0A077, transparent 58%),
+    radial-gradient(circle at 50% 50%, #D9703F, #9B4A24 78%);
+  box-shadow: 0 0 22px rgba(217,112,63,0.4);
+}
+
+.bh-card__mass { font-size: 16px; }
+
+/* ---- 버튼: 눌리는 물건처럼 ---- */
+
+.btn {
+  border-radius: 3px;
+  background: linear-gradient(170deg, rgba(245,243,239,0.07), rgba(245,243,239,0.02));
+}
+
+.btn--primary {
+  background: linear-gradient(170deg, #E07E4C, #C4602F);
+  box-shadow: 0 6px 20px rgba(217,112,63,0.28);
+}
+
+.btn--primary:hover { background: linear-gradient(170deg, #EC8B58, #D06B36); }
+
+/* ---- 줌 화면은 1080 을 넘어 양옆으로 번진다 ---- */
+
+.zoom__pin { padding-block: var(--s2); }
+
+.zoom__screen {
+  margin-inline: calc(var(--gutter) * -1);
+  border-inline: 0;
+  border-radius: 0;
+}
+
+@media (max-width: 900px) {
+  .cards { grid-template-columns: 1fr; }
+  .lab--mirror { grid-template-columns: 1fr; }
+  .lab--mirror .lab__controls { order: 1; }
+  .lab--mirror .lab__view { order: 2; }
+}
+
+/* 관측 회차 이름은 숫자가 아니다. 글자 O 가 0 으로 읽히지 않게 본문 글꼴로. */
+p.card__figure--run { font-family: var(--font); font-weight: 900; letter-spacing: -0.05em; }
+
+/* canvas fillText 로만 쓰는 글자는 unicode-range 서브셋을 내려받게 하지 못한다.
+   화면 밖에 같은 글자를 한 벌 두어 서브셋을 강제로 불러온다. 지우면 캔버스
+   글자가 두부로 깨진다. */
+.font-preload {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  font-weight: 400;
+}
+
+/* .card .num 이 (0,0,2,0) 으로 .card--lead 의 색을 이기고 있었다.
+   머릿수 하나만 악센트로 띄워 세 칸에 위계를 준다. */
+.card--lead p.card__figure .num { color: var(--accent); }
+
+/* ==========================================================================
+   체험 2 — 10^21 의 크기  (슬라이더판)
+   스크롤 핀을 버리고 손으로 끄는 막대로 바꿨다. 화면 안에서 앞뒤로 오갈 수
+   있어야 "얼마나 작은가" 를 비교할 수 있다.
+   ========================================================================== */
+
+.scale { display: block; }
+
+.scale__screen {
+  position: relative;
+  margin-inline: calc(var(--gutter) * -1);
+  border-block: 1px solid rgba(245, 243, 239, 0.14);
+  background:
+    radial-gradient(90% 90% at 50% 45%, rgba(217,112,63,0.07), transparent 62%),
+    radial-gradient(120% 100% at 50% 0%, rgba(245,243,239,0.05), transparent 55%),
+    #060605;
+  overflow: hidden;
+}
+
+.scale__screen canvas {
+  display: block;
+  width: 100%;
+  height: clamp(380px, 64vh, 660px);
+}
+
+/* ---- 끄는 막대 ---- */
+
+.scale__bar { margin-top: var(--s3); }
+
+.scale__slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.scale__slider-cap {
+  flex: none;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ink-faint);
+}
+
+.scale__slider {
+  flex: 1;
+  height: 34px;
+}
+
+.scale__slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(217,112,63,0.5), rgba(245,243,239,0.12));
+}
+
+.scale__slider::-webkit-slider-thumb {
+  width: 30px;
+  height: 30px;
+  margin-top: -12px;
+  border: 2px solid #0A0A0A;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 4px 18px rgba(217,112,63,0.5);
+}
+
+.scale__slider::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(217,112,63,0.5), rgba(245,243,239,0.12));
+}
+
+.scale__slider::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  border: 2px solid #0A0A0A;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 4px 18px rgba(217,112,63,0.5);
+}
+
+/* ---- 7단계 바로 가기 ---- */
+
+.scale__rail {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: var(--s2);
+}
+
+.scale__step {
+  padding: 9px 4px;
+  border: 0;
+  border-top: 2px solid rgba(245, 243, 239, 0.14);
+  background: none;
+  color: var(--ink-faint);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  transition: color 220ms var(--ease), border-color 220ms var(--ease);
+}
+
+.scale__step:hover { color: var(--ink); border-top-color: var(--ink-faint); }
+.scale__step[aria-current="true"] { color: var(--accent); border-top-color: var(--accent); }
+.scale__step:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- 읽는 칸 ---- */
+
+.scale__readout {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--s2) var(--s4);
+  align-items: end;
+  margin-top: var(--s3);
+  padding: var(--s3);
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(245,243,239,0.07), rgba(245,243,239,0.025) 60%);
+}
+
+.scale__what {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: clamp(19px, 3vw, 28px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.scale__cell { text-align: right; }
+
+.scale__cell dt {
+  margin-bottom: 5px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+}
+
+.scale__cell dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: clamp(16px, 2.3vw, 22px);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ---- 마지막 패널 ---- */
+
+.scale__final {
+  margin-top: var(--s2);
+  padding: var(--s3);
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(217,112,63,0.18), rgba(217,112,63,0.04) 65%);
+  box-shadow: inset 0 0 0 1px var(--accent-dim);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 480ms var(--ease), transform 600ms var(--spring);
+  pointer-events: none;
+}
+
+.scale__final.is-in { opacity: 1; transform: none; pointer-events: auto; }
+
+.scale__sum {
+  font-family: var(--mono);
+  font-size: clamp(14px, 2.1vw, 17px);
+  line-height: 2;
+}
+
+.scale__sum b { color: var(--accent); font-weight: 500; }
+
+.scale__analogy {
+  max-width: 62ch;
+  margin-top: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 760px) {
+  .scale__rail { grid-template-columns: repeat(4, 1fr); }
+  .scale__readout { grid-template-columns: 1fr 1fr; }
+  .scale__what { grid-column: 1 / -1; }
+  .scale__cell:first-of-type { text-align: left; }
+}
+
+/* [hidden] 은 브라우저 기본 스타일에서 display:none 이지만 특정도가
+   클래스와 같다. 뒤에 선언한 .badge 의 display 가 이겨 버리므로 여기서
+   한 번 더 못 박는다. */
+[hidden] { display: none !important; }
